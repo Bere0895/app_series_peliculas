@@ -2,18 +2,21 @@
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.app_series_peliculas.databinding.ActivityMainBinding
+import com.synnapps.carouselview.CarouselView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 import org.imaginativeworld.whynotimagecarousel.ImageCarousel
 import org.imaginativeworld.whynotimagecarousel.model.CarouselItem
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import android.widget.TextView
 
 
  class MainActivity : AppCompatActivity(), SearchView.OnQueryTextListener {
@@ -59,19 +62,14 @@ import android.widget.TextView
              runOnUiThread {
                  if(call.isSuccessful) {
                      moviesPlaying?.results?.let {
-                         val linearLayout = binding.layoutTitle
-                         val textView:TextView = binding.titleMovie
-                         val titMovie = it.map {
-                             textView.setText(it.title);
-
-                             //linearLayout.addView(textView);
-                         }
-                         val images = it.map {
-                             POSTER_BASE_URL + it.poster_path
-                         }
+                         val images = it.map { it }
                          nowPlayingList.clear()
                          val carousel: ImageCarousel = binding.movieNowPlaying
-                         images.map { nowPlayingList.add(CarouselItem(it)) }
+                         images.map {
+                             nowPlayingList.add(
+                                 CarouselItem(imageUrl = POSTER_BASE_URL + it.poster_path, caption =it.title)
+                             )
+                         }
                          carousel.addData(nowPlayingList)
                          adapter.notifyDataSetChanged()
                      }
@@ -86,14 +84,18 @@ import android.widget.TextView
      private fun getPopularMovies(){
          CoroutineScope(Dispatchers.IO).launch {
              val call = getRetrofit().create(APIService :: class.java).getMovies("movie/popular?api_key=$API_KEY")
-             val movies = call.body()
+             val moviesPopular = call.body()
              runOnUiThread {
                  if(call.isSuccessful) {
-                     movies?.results?.let {
-                         val images = it.map { POSTER_BASE_URL + it.poster_path }
+                     moviesPopular?.results?.let {
+                         val images = it.map { it }
                          popularList.clear()
                          val carousel: ImageCarousel = binding.moviePopular
-                         images.map { popularList.add(CarouselItem(it)) }
+                         images.map {
+                             popularList.add(
+                                 CarouselItem(imageUrl = POSTER_BASE_URL + it.poster_path, caption = it.title)
+                             )
+                         }
                          carousel.addData(popularList)
                          adapter.notifyDataSetChanged()
                      }
@@ -104,6 +106,7 @@ import android.widget.TextView
              }
          }
      }
+
      private fun searchByName(query: String) {
          CoroutineScope(Dispatchers.IO).launch {
              val call = getRetrofit().create(APIService :: class.java).getMovies("movie/popular?api_key=$API_KEY")
@@ -139,5 +142,13 @@ import android.widget.TextView
          return true
      }
 
+     fun clickPopular(view: View) {
+        println("INFO CLICK")
+         println(view)
+     }
+
+
 
  }
+
+
